@@ -40,68 +40,47 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 var passport_1 = __importDefault(require("passport"));
-var localStrategy = require("passport-local").Strategy;
-var express_1 = require("express");
-var prisma_1 = __importDefault(require("../lib/prisma"));
+var passport_local_1 = __importDefault(require("passport-local"));
+var passport_jwt_1 = __importDefault(require("passport-jwt"));
 var argon2_1 = require("argon2");
-var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-function signup(req, res, next) {
-    return __awaiter(this, void 0, void 0, function () {
-        var userModel, isUserExist, hashedPass, result;
-        return __generator(this, function (_a) {
-            switch (_a.label) {
-                case 0:
-                    userModel = req.body;
-                    return [4 /*yield*/, prisma_1.default.user.findFirst({
-                            where: { OR: { email: userModel.email } },
-                        })];
-                case 1:
-                    isUserExist = _a.sent();
-                    if (!isUserExist) return [3 /*break*/, 2];
-                    return [2 /*return*/, res.status(400).send({ message: "User already exists" })];
-                case 2: return [4 /*yield*/, (0, argon2_1.hash)(req.body.password, {
-                        salt: Buffer.from("123123123"),
+passport_1.default.use(new passport_local_1.default.Strategy({
+    usernameField: "email",
+    passwordField: "password",
+}, function (email, password, cb) { return __awaiter(void 0, void 0, void 0, function () {
+    var hashedPassword, user;
+    return __generator(this, function (_a) {
+        switch (_a.label) {
+            case 0: return [4 /*yield*/, (0, argon2_1.hash)(password, {
+                    salt: Buffer.from("123123123"),
+                })];
+            case 1:
+                hashedPassword = _a.sent();
+                return [4 /*yield*/, prisma.user.findFirst({
+                        where: { OR: { email: email, password: hashedPassword.toString() } },
                     })];
-                case 3:
-                    hashedPass = _a.sent();
-                    return [4 /*yield*/, prisma_1.default.user.create({
-                            data: {
-                                password: hashedPass.toString(),
-                                email: userModel.email,
-                                name: userModel.name,
-                            },
-                        })];
-                case 4:
-                    result = _a.sent();
-                    return [2 /*return*/, res.status(201).send({ message: "Account created" })];
-            }
-        });
-    });
-}
-function login(req, res, next) {
-    return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            passport_1.default.authenticate("local", { session: false }, function (err, user, info) {
-                if (err || !user) {
-                    return res.status(400).json({
-                        message: "Something is not right",
-                        user: user,
-                    });
+            case 2:
+                user = _a.sent();
+                console.log(user, hashedPassword);
+                if (!user) {
+                    return [2 /*return*/, cb(null, false, { message: "Incorrect email or password." })];
                 }
-                req.login(user, { session: false }, function (err) {
-                    if (err) {
-                        res.send(err);
-                    }
-                    // generate a signed son web token with the contents of user object and return it in the response
-                    var token = jsonwebtoken_1.default.sign(user, "your_jwt_secret", { expiresIn: "30s" });
-                    return res.json({ email: user.email, token: token });
-                });
-            })(req, res);
-            return [2 /*return*/];
-        });
+                return [2 /*return*/, cb(null, { email: user.email }, { message: "Logged In Successfully" })];
+        }
     });
-}
-var router = (0, express_1.Router)();
-router.post("/signup", signup);
-router.post("/login", login);
-exports.default = router;
+}); }));
+passport_1.default.use(new passport_jwt_1.default.Strategy({
+    jwtFromRequest: passport_jwt_1.default.ExtractJwt.fromAuthHeaderAsBearerToken(),
+    secretOrKey: "your_jwt_secret",
+}, function (jwtPayload, cb) {
+    //find the user in db if needed. This functionality may be omitted if you store everything you'll need in JWT payload.
+    return prisma.user
+        .findFirst({ where: { email: jwtPayload.id } })
+        .then(function (user) {
+        if (user) {
+            return cb(null, user);
+        }
+    })
+        .catch(function (err) {
+        return cb(err);
+    });
+}));
