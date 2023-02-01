@@ -1,9 +1,11 @@
 import Head from 'next/head'
 import Image from 'next/image'
 import styles from '../styles/Home.module.css'
+import Layout from '../layout/normal'
 
 export default function Home() {
   return (
+    <Layout>
     <div className={styles.container}>
       <Head>
         <title>NextCMS</title>
@@ -23,5 +25,6 @@ export default function Home() {
         </a>
       </footer>
     </div>
+    </Layout>
   )
 }

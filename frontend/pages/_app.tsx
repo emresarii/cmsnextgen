@@ -1,7 +1,7 @@
 import { GetServerSidePropsContext } from "next";
 import { useState } from "react";
 import { AppProps } from "next/app";
-import { getCookie, setCookies } from "cookies-next";
+import { getCookie, setCookie } from "cookies-next";
 import Head from "next/head";
 import {
   MantineProvider,
@@ -14,6 +14,8 @@ import { NotificationsProvider } from "@mantine/notifications";
 import { rtlCache, ltrCache } from "../lib/style-cache";
 import { HeaderMegaMenu } from "../components/header";
 import { AuthProvider } from "../lib/auth-context";
+import React from "react";
+
 
 export default function App(props: AppProps & { colorScheme: ColorScheme }) {
   const { Component, pageProps } = props;
@@ -25,10 +27,11 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
     const nextColorScheme =
       value || (colorScheme === "dark" ? "light" : "dark");
     setColorScheme(nextColorScheme);
-    setCookies("mantine-color-scheme", nextColorScheme, {
+    setCookie("mantine-color-scheme", nextColorScheme, {
       maxAge: 60 * 60 * 24 * 30,
     });
   };
+
 
   return (
     <>
@@ -54,7 +57,6 @@ export default function App(props: AppProps & { colorScheme: ColorScheme }) {
           >
             <NotificationsProvider>
               <AuthProvider>
-                <HeaderMegaMenu />
                 <Component {...pageProps} />
               </AuthProvider>
             </NotificationsProvider>

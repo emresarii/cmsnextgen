@@ -39,69 +39,42 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var passport_1 = __importDefault(require("passport"));
-var localStrategy = require("passport-local").Strategy;
 var express_1 = require("express");
 var prisma_1 = __importDefault(require("../lib/prisma"));
-var argon2_1 = require("argon2");
-var jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
-function signup(req, res, next) {
+function updateUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function () {
-        var userModel, isUserExist, hashedPass, result;
+        var userModel, user;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
                     userModel = req.body;
-                    return [4 /*yield*/, prisma_1.default.user.findFirst({
-                            where: { OR: { email: userModel.email } },
-                        })];
-                case 1:
-                    isUserExist = _a.sent();
-                    if (!isUserExist) return [3 /*break*/, 2];
-                    return [2 /*return*/, res.status(400).send({ message: "User already exists" })];
-                case 2: return [4 /*yield*/, (0, argon2_1.hash)(req.body.password, {
-                        salt: Buffer.from("123123123"),
-                    })];
-                case 3:
-                    hashedPass = _a.sent();
-                    return [4 /*yield*/, prisma_1.default.user.create({
+                    if (!userModel.id) return [3 /*break*/, 2];
+                    return [4 /*yield*/, prisma_1.default.user.update({
+                            where: { id: userModel.id },
                             data: {
-                                password: hashedPass.toString(),
                                 email: userModel.email,
-                                name: userModel.name,
+                                admin: userModel.admin,
                             },
                         })];
-                case 4:
-                    result = _a.sent();
-                    return [2 /*return*/, res.status(201).send({ message: "Account created" })];
+                case 1:
+                    user = _a.sent();
+                    return [2 /*return*/, res.status(200).json({ message: "Updated" })];
+                case 2: return [2 /*return*/, res.status(401).json({ message: "Not found" })];
             }
         });
     });
 }
-function login(req, res, next) {
+function getUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function () {
-        return __generator(this, function (_a) {
-            passport_1.default.authenticate("local", { session: false }, function (err, user, info) {
-                if (err || !user) {
-                    return res.status(400).json({
-                        message: "Something is not right",
-                        user: user,
-                    });
-                }
-                req.login(user, { session: false }, function (err) {
-                    if (err) {
-                        res.send(err);
-                    }
-                    // generate a signed son web token with the contents of user object and return it in the response
-                    var token = jsonwebtoken_1.default.sign(user, "your_jwt_secret", { expiresIn: "30m" });
-                    return res.json({ email: user.email, token: token });
-                });
-            })(req, res);
+        var _a, email, admin;
+        return __generator(this, function (_b) {
+            _a = req.user, email = _a.email, admin = _a.admin;
+            res.send({ email: email, admin: admin });
             return [2 /*return*/];
         });
     });
 }
 var router = (0, express_1.Router)();
-router.post("/signup", signup);
-router.post("/login", login);
+router.post("/", updateUser);
+router.get("/", getUser);
 exports.default = router;

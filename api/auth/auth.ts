@@ -41,7 +41,7 @@ async function login(req: Request, res: Response, next: NextFunction) {
         res.send(err);
       }
       // generate a signed son web token with the contents of user object and return it in the response
-      const token = jwt.sign(user, "your_jwt_secret", {expiresIn:"30s"});
+      const token = jwt.sign(user, "your_jwt_secret", {expiresIn:"30m"});
       return res.json({ email: user.email, token });
     });
   })(req, res);
