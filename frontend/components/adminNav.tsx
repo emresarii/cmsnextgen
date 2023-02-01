@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useContext, useState } from 'react';
 import { Navbar, SegmentedControl, Text, createStyles } from '@mantine/core';
 import {
   IconShoppingCart,
@@ -19,6 +19,7 @@ import {
   IconSwitchHorizontal,
 } from '@tabler/icons';
 import Link from 'next/link';
+import { AuthContext } from '../lib/auth-context';
 
 const useStyles = createStyles((theme, _params, getRef) => {
   const icon = getRef('icon');
@@ -105,7 +106,7 @@ export function NavbarAdmin() {
   const { classes, cx } = useStyles();
   const [section, setSection] = useState<'account' | 'general'>('account');
   const [active, setActive] = useState('Bilcling');
-
+  const authContext = useContext(AuthContext);
   const links = tabs[section].map((item) => (
     <Link
       className={cx(classes.link, { [classes.linkActive]: item.label === active })}
@@ -124,7 +125,7 @@ export function NavbarAdmin() {
     <Navbar height={940} width={{ sm: 300 }} p="md" className={classes.navbar}>
       <Navbar.Section>
         <Text weight={500} size="sm" className={classes.title} color="dimmed" mb="xs">
-          bgluesticker@mantine.dev
+          {authContext.user.user?.email}
         </Text>
 
         <SegmentedControl
