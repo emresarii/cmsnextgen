@@ -68,9 +68,11 @@ function getUser(req, res, next) {
     return __awaiter(this, void 0, void 0, function () {
         var _a, email, admin;
         return __generator(this, function (_b) {
+            if (!req.user) {
+                return [2 /*return*/, res.status(200).send({})];
+            }
             _a = req.user, email = _a.email, admin = _a.admin;
-            res.send({ email: email, admin: admin });
-            return [2 /*return*/];
+            return [2 /*return*/, res.status(200).send({ email: email, admin: admin })];
         });
     });
 }

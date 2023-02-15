@@ -43,6 +43,7 @@ var passport_1 = __importDefault(require("passport"));
 var passport_local_1 = __importDefault(require("passport-local"));
 var passport_jwt_1 = __importDefault(require("passport-jwt"));
 var argon2_1 = require("argon2");
+var utils_1 = require("../lib/utils");
 passport_1.default.use(new passport_local_1.default.Strategy({
     usernameField: "email",
     passwordField: "password",
@@ -69,12 +70,12 @@ passport_1.default.use(new passport_local_1.default.Strategy({
     });
 }); }));
 passport_1.default.use(new passport_jwt_1.default.Strategy({
-    jwtFromRequest: passport_jwt_1.default.ExtractJwt.fromAuthHeaderAsBearerToken(),
+    jwtFromRequest: utils_1.cookieExtractor,
     secretOrKey: "your_jwt_secret",
 }, function (jwtPayload, cb) {
     //find the user in db if needed. This functionality may be omitted if you store everything you'll need in JWT payload.
     return prisma.user
-        .findFirst({ where: { email: jwtPayload.id } })
+        .findFirst({ where: { email: jwtPayload.email } })
         .then(function (user) {
         if (user) {
             return cb(null, user);

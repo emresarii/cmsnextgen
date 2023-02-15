@@ -35,6 +35,7 @@ import {
 import Link from "next/link";
 import { AuthContext } from "../lib/auth-context";
 import { useContext } from "react";
+import axios from "../lib/api/axios";
 
 const useStyles = createStyles((theme) => ({
   link: {
@@ -147,7 +148,6 @@ export function HeaderMegaMenu() {
   const { colorScheme, toggleColorScheme } = useMantineColorScheme();
   const dark = colorScheme === "dark";
 
-
   const links = mockdata.map((item) => (
     <UnstyledButton className={classes.subLink} key={item.title}>
       <Group noWrap align="flex-start">
@@ -249,24 +249,33 @@ export function HeaderMegaMenu() {
             >
               {dark ? <IconSun size={18} /> : <IconMoonStars size={18} />}
             </ActionIcon>
-            {!authContext.isUserAuthenticated() && 
-            <>
-            <Button variant="default" component="a" href="/signin">
-              Log in
-            </Button>
-            <Button variant="default" component="a" href="/signup">
-              Sign up
-            </Button>
-            </>
-            }
+            {!authContext.session.user && (
+              <>
+                <Button variant="default" component="a" href="/signin">
+                  Log in
+                </Button>
+                <Button variant="default" component="a" href="/signup">
+                  Sign up
+                </Button>
+              </>
+            )}
 
-          {authContext.isUserAuthenticated() && 
-            <>
-            <Button variant="default" component="a" href="/" onClick={() => authContext.logOut()}>
-              Log Out
-            </Button>
-            </>
-            }
+            {authContext.session.user && (
+              <>
+                <Button
+                  variant="default"
+                  component="a"
+                  href="/"
+                  onClick={async () => {
+                    await axios.get("/logout");
+                    await authContext.fetchSession()
+                    window.location.reload();
+                  }}
+                >
+                  Log Out
+                </Button>
+              </>
+            )}
           </Group>
 
           <Burger

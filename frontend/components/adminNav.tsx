@@ -125,7 +125,7 @@ export function NavbarAdmin() {
     <Navbar height={940} width={{ sm: 300 }} p="md" className={classes.navbar}>
       <Navbar.Section>
         <Text weight={500} size="sm" className={classes.title} color="dimmed" mb="xs">
-          {authContext.user.user?.email}
+          {authContext.session.user?.email}
         </Text>
 
         <SegmentedControl

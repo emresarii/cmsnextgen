@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response, Router } from "express";
 import prisma from "../lib/prisma";
 import { User } from "@prisma/client";
+import { cookieExtractor } from "../lib/utils";
 
 async function updateUser(req: Request, res: Response, next: NextFunction) {
   const userModel: User = req.body;
@@ -21,9 +22,11 @@ async function updateUser(req: Request, res: Response, next: NextFunction) {
 }
 
 async function getUser(req: Request, res: Response, next: NextFunction) {
+  if (!req.user) {
+    return res.status(200).send({});
+  }
   const { email, admin } = req.user as User;
-
-  res.send({ email, admin });
+  return res.status(200).send({ email, admin });
 }
 
 const router = Router();

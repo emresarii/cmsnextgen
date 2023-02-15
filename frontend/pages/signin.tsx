@@ -70,8 +70,8 @@ export default function AuthenticationForm() {
             onSubmit={form.onSubmit(async (values) => {
               try {
                 const data = await axios.post("/login", values);
-                if (data.data.token) {
-                  authContext.setAuthState({ data: data.data.token });
+                if (data.status == 200) {
+                  await authContext.fetchSession();
                   router.push("/");
                 }
               } catch (e: Error | AxiosError | any) {

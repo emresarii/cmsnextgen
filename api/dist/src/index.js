@@ -47,21 +47,24 @@ var cors_1 = __importDefault(require("cors"));
 var helmet_1 = __importDefault(require("helmet"));
 var passport_1 = __importDefault(require("passport"));
 var auth_1 = __importDefault(require("../auth/auth"));
+var cookie_parser_1 = __importDefault(require("cookie-parser"));
 require("../auth/passport");
 var user_1 = __importDefault(require("../endpoints/user"));
 dotenv_1.default.config();
 var app = (0, express_1.default)();
 var port = process.env.PORT;
 app.use(body_parser_1.default.json());
+app.use((0, cookie_parser_1.default)());
 app.use(passport_1.default.initialize());
-app.use((0, cors_1.default)());
+app.use(express_1.default.urlencoded({ extended: true }));
+app.use((0, cors_1.default)({ credentials: true, origin: "http://localhost:3000" }));
 app.use((0, helmet_1.default)());
 passport_1.default.serializeUser(function (user, done) {
     console.log(user);
     return done(null, user);
 });
 passport_1.default.deserializeUser(function (id, done) {
-    console.log(id);
+    console.log("------------", id);
     return done(null, prisma_1.default.user.findFirst({ where: { email: id } }));
 });
 app.use("/", auth_1.default);
@@ -89,17 +92,7 @@ app.use("/users", passport_1.default.authenticate("jwt", { session: false }), fu
         }
     });
 }); });
-app.use("/user", passport_1.default.authenticate("jwt", { session: false }), function (req, res, next) { return __awaiter(void 0, void 0, void 0, function () {
-    var user;
-    return __generator(this, function (_a) {
-        user = req.user;
-        if (!user.admin) {
-            res.json("Aasdf");
-        }
-        next();
-        return [2 /*return*/];
-    });
-}); }, user_1.default);
+app.use("/session", passport_1.default.authenticate("jwt", { session: false }), user_1.default);
 app.listen(port, function () {
     console.log("\u26A1\uFE0F[server]: Server is running at https://localhost:".concat(port));
 });

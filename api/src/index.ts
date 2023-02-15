@@ -7,6 +7,7 @@ import cors from "cors";
 import helmet from "helmet";
 import passport from "passport";
 import authRouter from "../auth/auth";
+import cookieParser from 'cookie-parser'
 
 import "../auth/passport";
 import userRouter from "../endpoints/user";
@@ -16,8 +17,10 @@ dotenv.config();
 const app: Express = express();
 const port = process.env.PORT;
 app.use(bodyParser.json());
+app.use(cookieParser())
 app.use(passport.initialize());
-app.use(cors());
+app.use(express.urlencoded({ extended: true }))
+app.use(cors({credentials: true, origin: "http://localhost:3000"}));
 app.use(helmet());
 
 passport.serializeUser((user, done) => {
@@ -26,7 +29,7 @@ passport.serializeUser((user, done) => {
 });
 
 passport.deserializeUser((id: string, done) => {
-  console.log(id);
+  console.log("------------", id);
 
   return done(null, prisma.user.findFirst({ where: { email: id } }));
 });
@@ -54,16 +57,8 @@ app.use(
 );
 
 app.use(
-  "/user",
+  "/session",
   passport.authenticate("jwt", { session: false }),
-  async (req, res, next) => {
-    const user = req.user as User;
-
-    if (!user.admin) {
-      res.json("Aasdf");
-    }
-    next();
-  },
   userRouter
 );
 

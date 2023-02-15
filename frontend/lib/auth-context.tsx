@@ -3,21 +3,13 @@ import { useRouter } from "next/router";
 import axios from "../lib/api/axios";
 import { User } from "./types";
 
-interface AuthState {
-  token: string | null;
-}
-
 interface UserState {
   user: User | null;
 }
 
 type AuthContextType = {
-  authState: AuthState;
-  setAuthState: (userAuthInfo: { data: string }) => void;
-  isUserAuthenticated: () => boolean;
-  logOut: () => void;
-  isAdmin: () => boolean;
-  user: UserState;
+  session: UserState;
+  fetchSession: () => void;
 };
 
 const AuthContext = React.createContext<AuthContextType>({} as AuthContextType);
@@ -27,75 +19,35 @@ interface childrenProps {
   children: React.ReactNode;
 }
 
-function setToken(data: string) {
-  window.localStorage.setItem("token", data);
-}
-
-function logOut() {
-  localStorage.removeItem("token");
-}
-
 const AuthProvider = ({ children }: childrenProps) => {
-  const [authState, setAuthState] = React.useState<AuthState>({
-    token: "",
-  });
-
-  const [user, setUser] = useState<UserState>({
+  const [session, setSession] = useState<UserState>({
     user: null,
   });
 
-  const getData = async () => {
+  const fetchSession = async () => {
     try {
-      const { data } = await axios.get(`/user`);
+      const { data } = await axios.get(`/session`);
 
       const responseUser = data as User;
-      setUser({
-        user: responseUser,
-      });
+      if (!(Object.keys(responseUser).length === 0)) {
+        setSession({
+          user: responseUser,
+        });
+      }
     } catch {
       console.log("something went wrong");
     }
   };
 
-  const isAdmin = useCallback(() => {
-    return user?.user?.admin ?? false;
-  }, [user]);
-
-  const setUserAuthInfo = ({ data }: { data: string }) => {
-    setToken(data);
-
-    setAuthState({
-      token: data,
-    });
-  };
-
-  const isUserAuthenticated = (): boolean => {
-    return !authState.token ? false : true;
-  };
-
   React.useEffect(() => {
-    if (typeof window !== undefined && window.localStorage.getItem("token")) {
-      const token = localStorage.getItem("token");
-      setAuthState({ token });
-    }
+    fetchSession();
   }, []);
-
-  React.useEffect(() => {
-    if (authState.token) {
-      const user = getData();
-    }
-  }, [authState]);
 
   return (
     <Provider
       value={{
-        authState,
-        setAuthState: (userAuthInfo: { data: string }) =>
-          setUserAuthInfo(userAuthInfo),
-        isUserAuthenticated,
-        logOut,
-        isAdmin,
-        user,
+        session,
+        fetchSession,
       }}
     >
       {children}
@@ -103,4 +55,4 @@ const AuthProvider = ({ children }: childrenProps) => {
   );
 };
 
-export { AuthContext, AuthProvider, logOut };
+export { AuthContext, AuthProvider };

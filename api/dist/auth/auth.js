@@ -94,9 +94,37 @@ function login(req, res, next) {
                     }
                     // generate a signed son web token with the contents of user object and return it in the response
                     var token = jsonwebtoken_1.default.sign(user, "your_jwt_secret", { expiresIn: "30m" });
-                    return res.json({ email: user.email, token: token });
+                    return res
+                        .cookie("jwt", token, {
+                        httpOnly: true,
+                        secure: false, //--> SET TO TRUE ON PRODUCTION
+                    })
+                        .status(200)
+                        .json({
+                        message: "You have logged in ",
+                    });
                 });
             })(req, res);
+            return [2 /*return*/];
+        });
+    });
+}
+function logout(req, res, next) {
+    return __awaiter(this, void 0, void 0, function () {
+        return __generator(this, function (_a) {
+            if (req.cookies['jwt']) {
+                res
+                    .clearCookie('jwt')
+                    .status(200)
+                    .json({
+                    message: 'You have logged out'
+                });
+            }
+            else {
+                res.status(401).json({
+                    error: 'Invalid jwt'
+                });
+            }
             return [2 /*return*/];
         });
     });
@@ -104,4 +132,5 @@ function login(req, res, next) {
 var router = (0, express_1.Router)();
 router.post("/signup", signup);
 router.post("/login", login);
+router.get("/logout", logout);
 exports.default = router;
